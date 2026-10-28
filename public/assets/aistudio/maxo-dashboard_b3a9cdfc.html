@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en" class="booting">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>MAXO Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Unbounded:wght@300;500;700;900&family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+    --bg:#000;
+    --line:#1c1c1c;
+    --line2:#2e2e2e;
+    --fg:#f5f5f5;
+    --mut:#8c8c8c;
+    --dim:#4b4b4b;
+    --ease:cubic-bezier(.16,1,.3,1);
+    --display:'Unbounded','Vazirmatn',system-ui,sans-serif;
+    --mono:'JetBrains Mono','Vazirmatn',ui-monospace,Consolas,monospace;
+}
+
+html{background:#000;color-scheme:dark}
+
+body{
+    min-height:100vh;
+    background:#000;
+    color:var(--fg);
+    font:400 13px/1.6 var(--mono);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+}
+
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+svg.ic{width:1.15em;height:1.15em;flex:none}
+::selection{background:#fff;color:#000}
+
+*{scrollbar-width:thin;scrollbar-color:#333 transparent}
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* ---------- background ---------- */
+.bg-grid{
+    position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.09;
+    background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(ellipse at 50% 30%,#000 10%,transparent 75%);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 30%,#000 10%,transparent 75%);
+    animation:drift 40s linear infinite;
+}
+.bg-glow{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(620px circle at var(--mx,60%) var(--my,0%),rgba(255,255,255,.07),transparent 60%);
+}
+@keyframes drift{to{background-position:48px 48px,48px 48px}}
+
+/* ---------- boot ---------- */
+#boot{
+    position:fixed;inset:0;z-index:1000;background:#000;display:grid;place-items:center;
+    clip-path:inset(0 0 0 0);transition:clip-path 1s var(--ease);
+}
+#boot.done{clip-path:inset(0 0 100% 0)}
+.boot-in{text-align:center;padding:0 20px}
+.boot-word{display:flex;justify-content:center;overflow:hidden;font:900 clamp(52px,15vw,130px)/1.05 var(--display)}
+.boot-word span{display:inline-block;transform:translateY(110%);animation:letterUp .8s var(--ease) forwards;animation-delay:calc(var(--k)*90ms)}
+.boot-bar{width:min(240px,60vw);height:1px;background:var(--line2);margin:26px auto 14px;position:relative;overflow:hidden}
+.boot-bar i{position:absolute;inset:0;background:#fff;transform:scaleX(0);transform-origin:left;animation:fill 1.1s .2s var(--ease) forwards}
+.boot-sub{color:var(--mut);font-size:11px}
+@keyframes letterUp{to{transform:translateY(0)}}
+@keyframes fill{to{transform:scaleX(1)}}
+
+/* ---------- layout ---------- */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh;position:relative;z-index:1}
+
+.side{
+    position:sticky;top:0;height:100vh;padding:26px 16px;display:flex;flex-direction:column;
+    border-right:1px solid var(--line);background:rgba(0,0,0,.55);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.brand{display:flex;align-items:center;gap:12px;padding:0 8px 28px}
+.brand-mark{
+    width:40px;height:40px;border-radius:12px;border:1px solid var(--line2);display:grid;place-items:center;
+    font:900 14px var(--display);position:relative;overflow:hidden;
+}
+.brand-mark::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);
+    transform:translateX(-120%);animation:sheen 5s 2s ease-in-out infinite;
+}
+@keyframes sheen{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.brand-name{font:700 13px var(--display);letter-spacing:.02em}
+.brand-sub{color:var(--mut);font-size:11px}
+
+.nav-list{position:relative;display:flex;flex-direction:column;gap:4px}
+.nav-ind{
+    position:absolute;left:0;top:0;width:0;height:0;border-radius:14px;pointer-events:none;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+    transition:transform .6s var(--ease),width .6s var(--ease),height .6s var(--ease);
+}
+.nav-item{
+    position:relative;z-index:1;display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:14px;
+    color:var(--mut);font-weight:500;text-align:left;transition:color .3s;
+}
+.nav-item .ic{font-size:17px;transition:transform .5s var(--ease)}
+.nav-item:hover{color:#fff}
+.nav-item:hover .ic{transform:translateX(3px) scale(1.08)}
+.nav-item.active{color:#fff}
+
+.side-foot{margin-top:auto;padding:0 8px;color:var(--dim);font-size:11px;line-height:1.8}
+.side-foot b{display:block;color:var(--mut);font:500 18px var(--mono);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+
+.main{width:100%;max-width:1140px;margin:0 auto;padding:46px clamp(16px,4vw,52px) 70px}
+
+.view{display:none}
+.view.active{display:block}
+.view.active>.rise{animation:rise .85s var(--ease) backwards;animation-delay:calc(var(--i,0)*85ms)}
+.view>.rise+.rise{margin-top:16px}
+@keyframes rise{from{opacity:0;transform:translateY(20px);filter:blur(8px)}to{opacity:1;transform:none;filter:blur(0)}}
+html.booting .view.active>.rise,
+html.booting .hero-word span{animation-play-state:paused}
+
+.page-head h1{font:800 clamp(26px,4.6vw,42px)/1.05 var(--display);letter-spacing:-.015em}
+.page-head p{color:var(--mut);margin-top:12px;max-width:56ch}
+
+/* ---------- hero ---------- */
+.hero{padding:6px 0 34px}
+.hero-live{display:inline-flex;align-items:center;gap:10px;color:var(--mut);margin-bottom:20px}
+.hero-word{
+    display:flex;overflow:hidden;padding:0 0 .1em;
+    font:900 clamp(32px,10.4vw,108px)/1.02 var(--display);letter-spacing:-.025em;
+    animation:glow 6s 3s ease-in-out infinite;
+}
+.hero-word span{display:inline-block;transform:translateY(108%);animation:letterUp .95s var(--ease) forwards;animation-delay:calc(var(--k)*60ms)}
+@keyframes glow{0%,100%{text-shadow:0 0 0 rgba(255,255,255,0)}50%{text-shadow:0 0 46px rgba(255,255,255,.28)}}
+.hero p{color:var(--mut);margin-top:18px;max-width:52ch}
+
+/* ---------- cards ---------- */
+.card{
+    position:relative;overflow:hidden;border:1px solid var(--line);border-radius:22px;padding:22px;
+    background:linear-gradient(180deg,#0b0b0b,#040404);
+    box-shadow:0 24px 70px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.04);
+    transition:border-color .3s;
+}
+.card::before{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .45s;
+    background:radial-gradient(380px circle at var(--x,50%) var(--y,0%),rgba(255,255,255,.075),transparent 60%);
+}
+.card:hover::before{opacity:1}
+.card-title{font:700 14px var(--display);margin-bottom:18px;display:flex;align-items:center;gap:12px}
+.card-title .ic{font-size:18px;color:var(--mut)}
+
+.state{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;color:var(--mut)}
+.state i{width:7px;height:7px;border-radius:50%;border:1px solid var(--mut);transition:.3s}
+.state.on{color:#fff}
+.state.on i{background:#fff;border-color:#fff;box-shadow:0 0 10px #fff;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 2px #fff;opacity:.55}}
+
+.mods{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.mod{cursor:pointer;display:flex;flex-direction:column;gap:14px;min-height:210px;transition:transform .55s var(--ease),border-color .3s}
+.mod:hover{transform:translateY(-5px);border-color:var(--line2)}
+.mod-ic{
+    width:48px;height:48px;border-radius:15px;border:1px solid var(--line2);display:grid;place-items:center;font-size:21px;
+    transition:transform .55s var(--ease),background .3s,color .3s;
+}
+.mod:hover .mod-ic{background:#fff;color:#000;transform:rotate(-8deg) scale(1.07)}
+.mod h3{font:700 17px var(--display);margin-top:4px}
+.mod p{color:var(--mut)}
+.mod-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mod-go{color:var(--mut);transition:transform .5s var(--ease),color .3s}
+.mod:hover .mod-go{transform:translateX(6px);color:#fff}
+.mod-meta{color:var(--dim);font-size:11px}
+
+.log{list-style:none}
+.log li{display:flex;gap:16px;padding:12px 0;border-top:1px solid var(--line);animation:rise .6s var(--ease) backwards;animation-delay:calc(var(--i,0)*50ms)}
+.log li:first-child{border-top:0;padding-top:0}
+.log time{color:var(--dim);font-variant-numeric:tabular-nums;flex:none}
+.log .empty{color:var(--mut);display:block}
+
+/* ---------- connection ---------- */
+.conn{padding:16px 22px}
+.conn-head{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:4px 0}
+.conn-dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--mut);flex:none;transition:.3s}
+.conn.saved .conn-dot{background:#fff;border-color:#fff;box-shadow:0 0 10px #fff;animation:pulse 2.4s ease-in-out infinite}
+.conn-title{font:700 12px var(--display)}
+.conn-state{margin-left:auto;color:var(--mut);font-size:11.5px}
+.conn.saved .conn-state{color:#fff}
+.conn-chev{display:grid;color:var(--mut);transition:transform .55s var(--ease)}
+.conn.open .conn-chev{transform:rotate(180deg)}
+.conn-inner{padding:20px 0 4px}
+
+.reveal{display:grid;grid-template-rows:0fr;transition:grid-template-rows .65s var(--ease)}
+.reveal.show,.conn.open>.reveal{grid-template-rows:1fr}
+.reveal>div{min-height:0;overflow:hidden}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chips:empty{display:none}
+.chip{
+    font-size:11px;border:1px solid var(--line2);border-radius:100px;padding:4px 12px;color:#d0d0d0;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;animation:pop .55s var(--ease) backwards;
+}
+.chip b{color:var(--dim);font-weight:500;margin-right:8px}
+.chip.bad{border-style:dashed;color:var(--mut)}
+@keyframes pop{from{opacity:0;transform:scale(.85) translateY(6px)}}
+
+/* ---------- fields ---------- */
+.field{margin-top:16px}
+.field:first-child{margin-top:0}
+.field>label{display:block;color:var(--mut);font-size:11.5px;margin-bottom:8px}
+.inp{
+    width:100%;background:#020202;border:1px solid var(--line);border-radius:12px;padding:13px 14px;outline:none;
+    transition:border-color .25s,box-shadow .3s,background .25s;
+}
+.inp:hover{border-color:var(--line2)}
+.inp:focus{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.07),0 0 28px rgba(255,255,255,.05)}
+.inp::placeholder{color:var(--dim)}
+textarea.inp{min-height:230px;resize:vertical;line-height:1.7;tab-size:4;white-space:pre;overflow:auto;font-size:12.5px}
+select.inp{
+    appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:40px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c8c8c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 13px center;background-size:16px;
+}
+select.inp option{background:#000;color:#fff}
+.inp-wrap{position:relative}
+.inp-wrap .inp{padding-right:50px}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--mut);transition:.25s}
+.eye:hover{color:#fff;background:rgba(255,255,255,.07)}
+.meta{display:flex;justify-content:space-between;gap:12px;color:var(--dim);font-size:11px;margin-top:9px}
+.hint{color:var(--dim);font-size:11px;line-height:1.7;margin-top:12px}
+
+/* ---------- buttons ---------- */
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.btn{
+    position:relative;overflow:hidden;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    padding:14px 16px;border-radius:12px;font:600 11px var(--display);letter-spacing:.04em;
+    background:#fff;color:#000;border:1px solid #fff;
+    transition:transform .3s var(--ease),box-shadow .35s,background .3s,color .3s,border-color .3s,opacity .3s;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(255,255,255,.2)}
+.btn:active{transform:scale(.97)}
+.btn.sec{background:#0a0a0a;color:#fff;border-color:var(--line2)}
+.btn.sec:hover{border-color:#7a7a7a;box-shadow:0 12px 34px rgba(255,255,255,.07)}
+.btn.ghost{background:transparent;color:var(--mut);border-color:var(--line2)}
+.btn.ghost:hover{color:#fff;border-color:#6a6a6a;box-shadow:none}
+.btn.sm{width:auto;padding:12px 18px}
+.btn.busy{pointer-events:none;opacity:.7}
+.btn.busy::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:40%;background:currentColor;animation:sweep 1s ease-in-out infinite}
+@keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+.ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.22;transform:scale(0);animation:rip .75s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+
+/* ---------- status ---------- */
+.status{
+    position:relative;overflow:hidden;margin-top:14px;min-height:46px;display:flex;align-items:center;gap:12px;
+    padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#020202;color:var(--mut);
+    font-size:11.5px;line-height:1.5;word-break:break-word;transition:border-color .3s,color .3s;
+}
+.status i{width:7px;height:7px;border-radius:50%;border:1px solid currentColor;flex:none}
+.status.loading{color:#d2d2d2;border-color:#363636}
+.status.loading i{background:currentColor;animation:blink 1s infinite}
+.status.loading::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);transform:translateX(-100%);animation:shimmer 1.4s infinite}
+.status.ok{color:#fff;border-color:#4d4d4d}
+.status.ok i{background:#fff;box-shadow:0 0 10px #fff}
+.status.error{color:#bcbcbc;border:1px dashed #5a5a5a}
+.status.error i{border-style:dashed}
+@keyframes blink{50%{opacity:.25}}
+@keyframes shimmer{to{transform:translateX(100%)}}
+
+/* ---------- current content ---------- */
+.cur{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#020202}
+.cur-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);background:#070707;color:var(--mut);font-size:11px}
+.cur-size{color:var(--dim)}
+.cur-body{padding:14px;color:#bdbdbd;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto}
+.cur-body.link{color:#fff;word-break:break-all;max-height:none}
+
+/* ---------- users ---------- */
+.sync{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sync-info{display:flex;align-items:center;gap:16px}
+.sync-ic{width:46px;height:46px;border-radius:14px;border:1px solid var(--line2);display:grid;place-items:center;font-size:20px}
+.sync-ic.spin .ic{animation:spin 1s linear infinite}
+.sync h3{font:700 14px var(--display)}
+.sync p{color:var(--mut);margin-top:3px;font-size:12px}
+.sync .btn{width:auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{padding:18px;border:1px solid var(--line);border-radius:18px;background:#050505;transition:transform .5s var(--ease),border-color .3s}
+.stat:hover{transform:translateY(-3px);border-color:var(--line2)}
+.stat small{display:block;color:var(--mut);font-size:11.5px}
+.stat b{display:block;margin-top:6px;font:800 clamp(24px,4vw,38px)/1.1 var(--display);font-variant-numeric:tabular-nums}
+
+.workspace{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:1180px){.workspace{grid-template-columns:320px minmax(0,1fr)}}
+
+.search{position:relative;margin-bottom:16px}
+.search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
+.search .inp{padding-left:42px}
+
+.tbl-wrap{display:none;border:1px solid var(--line);border-radius:14px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;text-align:left;white-space:nowrap;font-size:12.5px}
+th,td{padding:12px 14px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{background:#070707;color:var(--mut);font-weight:500;font-size:11.5px}
+tbody tr{animation:rise .55s var(--ease) backwards;animation-delay:calc(var(--i,0)*40ms);transition:background .25s}
+tbody tr:hover{background:rgba(255,255,255,.035)}
+td code{font:inherit;color:var(--mut)}
+tr.off{opacity:.5}
+.cards{display:flex;flex-direction:column;gap:10px}
+.ucard{border:1px solid var(--line);border-radius:16px;padding:14px;background:#030303;animation:rise .55s var(--ease) backwards;animation-delay:calc(var(--i,0)*40ms);transition:border-color .3s}
+.ucard:hover{border-color:var(--line2)}
+.ucard.off{opacity:.5}
+.ucard-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--line);font-weight:700}
+.ucard-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;color:var(--mut);font-size:12px;padding:12px 0}
+.ucard-body b{color:#fff;font-weight:500;display:block;word-break:break-all}
+.ucard-act{display:flex;justify-content:flex-end;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+@media(min-width:700px){.tbl-wrap{display:block}.cards{display:none}}
+
+.badge{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:100px;font-size:11px;border:1px solid var(--line2);white-space:nowrap;color:var(--mut)}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;border:1px solid currentColor}
+.b-active{color:#fff;border-color:#fff}
+.b-active::before{background:#fff;box-shadow:0 0 8px #fff;animation:pulse 2.4s infinite}
+.b-expired{color:var(--mut)}
+.b-disabled{border-style:dashed;color:#b0b0b0}
+
+.ib{display:inline-flex;align-items:center;gap:7px;min-width:34px;height:34px;padding:0 9px;justify-content:center;border-radius:10px;color:var(--mut);font-size:11.5px;transition:background .25s,color .25s,transform .3s var(--ease)}
+.ib:hover{background:#fff;color:#000;transform:translateY(-2px)}
+.ib:active{transform:scale(.92)}
+.ib .ic{font-size:15px}
+.acts{display:flex;gap:2px}
+.empty-row{text-align:center;color:var(--mut);padding:30px 14px}
+
+/* ---------- modal ---------- */
+.modal{
+    position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:16px;
+    background:rgba(0,0,0,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    opacity:0;pointer-events:none;transition:opacity .35s;
+}
+.modal.open{opacity:1;pointer-events:auto}
+.sheet{
+    width:100%;max-width:470px;max-height:92vh;overflow:auto;background:#070707;border:1px solid var(--line2);border-radius:26px;padding:24px;
+    transform:translateY(28px) scale(.95);opacity:0;transition:transform .6s var(--ease),opacity .35s;
+    box-shadow:0 40px 120px #000,0 0 0 1px rgba(255,255,255,.03);
+}
+.modal.open .sheet{transform:none;opacity:1}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
+.sheet-head h3{font:700 15px var(--display)}
+.sheet p.sub{color:var(--mut);font-size:12px;margin-bottom:18px}
+.x{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:var(--mut);transition:.3s var(--ease)}
+.x:hover{background:rgba(255,255,255,.08);color:#fff;transform:rotate(90deg)}
+.edit-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.edit-cur{border:1px dashed var(--line2);border-radius:10px;padding:11px 12px;font-size:11.5px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.edit-arrow{color:var(--mut);display:grid}
+.edit-row .inp{padding:11px 12px;font-size:12px}
+.sheet .btns{grid-template-columns:1fr}
+.confirm .btns{grid-template-columns:1fr 1fr}
+
+/* ---------- toast + top bar ---------- */
+.toasts{position:fixed;top:16px;right:16px;z-index:500;display:flex;flex-direction:column;gap:10px;width:min(370px,calc(100vw - 32px));pointer-events:none}
+.toast{
+    position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:15px;pointer-events:auto;
+    background:rgba(10,10,10,.92);border:1px solid var(--line2);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 18px 50px rgba(0,0,0,.75);animation:toastIn .65s var(--ease) both;font-size:12px;
+}
+.toast::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:100%;background:#fff;transform-origin:left;animation:timer 3.2s linear forwards}
+.toast.error{border:1px dashed #666}
+.toast.error::after{background:#777}
+.toast.leave{animation:toastOut .45s var(--ease) forwards}
+@keyframes toastIn{from{opacity:0;transform:translateX(60px) scale(.94)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(60px) scale(.94)}}
+@keyframes timer{to{transform:scaleX(0)}}
+
+#topbar{position:fixed;top:0;left:0;height:2px;width:35%;background:#fff;box-shadow:0 0 14px #fff;z-index:900;opacity:0;transition:opacity .3s;pointer-events:none}
+#topbar.on{opacity:1;animation:topload 1.2s ease-in-out infinite}
+@keyframes topload{from{transform:translateX(-100%)}to{transform:translateX(300%)}}
+
+/* ---------- responsive ---------- */
+@media(max-width:860px){
+    .app{grid-template-columns:1fr}
+    .side{
+        position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));top:auto;height:auto;z-index:100;
+        padding:7px;border:1px solid var(--line2);border-radius:24px;background:rgba(8,8,8,.84);flex-direction:row;
+        box-shadow:0 20px 60px rgba(0,0,0,.8);
+    }
+    .brand,.side-foot{display:none}
+    .nav-list{flex-direction:row;width:100%;gap:2px}
+    .nav-item{flex:1;flex-direction:column;justify-content:center;gap:5px;padding:10px 4px;font-size:10.5px;border-radius:18px}
+    .nav-ind{border-radius:18px}
+    .main{padding-top:30px;padding-bottom:120px}
+    .toasts{right:50%;transform:translateX(50%)}
+}
+@media(max-width:520px){
+    .card{padding:18px;border-radius:20px}
+    .btns{grid-template-columns:1fr}
+    .confirm .btns{grid-template-columns:1fr 1fr}
+    .stats{gap:8px}
+    .stat{padding:14px 12px}
+    .edit-row{grid-template-columns:1fr;gap:6px}
+    .edit-arrow{display:none}
+    .sync .btn{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div id="topbar"></div>
+
+<!-- BOOT -->
+<div id="boot">
+    <div class="boot-in">
+        <div class="boot-word" aria-hidden="true">
+            <span style="--k:0">M</span><span style="--k:1">A</span><span style="--k:2">X</span><span style="--k:3">O</span>
+        </div>
+        <div class="boot-bar"><i></i></div>
+        <div class="boot-sub">Loading dashboard</div>
+    </div>
+</div>
+
+<div class="app">
+
+    <!-- NAV -->
+    <nav class="side" aria-label="Sections">
+        <div class="brand">
+            <div class="brand-mark">M</div>
+            <div>
+                <div class="brand-name">MAXO</div>
+                <div class="brand-sub">Dashboard</div>
+            </div>
+        </div>
+
+        <div class="nav-list" id="navList">
+            <div class="nav-ind" id="navInd"></div>
+            <button class="nav-item active" data-act="go" data-arg="overview"><i data-ic="grid"></i><span>Overview</span></button>
+            <button class="nav-item" data-act="go" data-arg="shizuku"><i data-ic="file"></i><span>Shizuku</span></button>
+            <button class="nav-item" data-act="go" data-arg="link"><i data-ic="link"></i><span>Link</span></button>
+            <button class="nav-item" data-act="go" data-arg="users"><i data-ic="users"></i><span>Users</span></button>
+        </div>
+
+        <div class="side-foot">
+            Private control panel
+            <b id="clock">--:--:--</b>
+        </div>
+    </nav>
+
+    <main class="main">
+
+        <!-- ========== OVERVIEW ========== -->
+        <section class="view active" id="view-overview">
+
+            <div class="hero rise" style="--i:0">
+                <div class="hero-live state on"><i></i>MAXO control panel</div>
+                <h1 class="hero-word" aria-label="Dashboard">
+                    <span style="--k:0">D</span><span style="--k:1">A</span><span style="--k:2">S</span><span style="--k:3">H</span><span style="--k:4">B</span><span style="--k:5">O</span><span style="--k:6">A</span><span style="--k:7">R</span><span style="--k:8">D</span>
+                </h1>
+                <p>Edit your GitHub-hosted files, links and user licenses from one place.</p>
+            </div>
+
+            <div class="mods rise" style="--i:1">
+                <div class="card mod" data-act="go" data-arg="shizuku">
+                    <div class="mod-ic"><i data-ic="file"></i></div>
+                    <div><h3>Shizuku</h3><p>Edit the Shizuku file content on GitHub.</p></div>
+                    <div class="mod-foot">
+                        <div class="state" id="ov-shizuku"><i></i><span>Not connected</span></div>
+                        <span class="mod-go"><i data-ic="arrow"></i></span>
+                    </div>
+                </div>
+                <div class="card mod" data-act="go" data-arg="link">
+                    <div class="mod-ic"><i data-ic="link"></i></div>
+                    <div><h3>Link</h3><p>Change the online link file.</p></div>
+                    <div class="mod-foot">
+                        <div class="state" id="ov-link"><i></i><span>Not connected</span></div>
+                        <span class="mod-go"><i data-ic="arrow"></i></span>
+                    </div>
+                </div>
+                <div class="card mod" data-act="go" data-arg="users">
+                    <div class="mod-ic"><i data-ic="users"></i></div>
+                    <div><h3>Users</h3><p>Add, extend, pause and remove licenses.</p></div>
+                    <div class="mod-foot">
+                        <div class="state" id="ov-users"><i></i><span>Not connected</span></div>
+                        <span class="mod-meta" id="ov-users-count">Not synced</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card rise" style="--i:2">
+                <div class="card-title"><i data-ic="pulse"></i>Session activity</div>
+                <ul class="log" id="logList"></ul>
+            </div>
+        </section>
+
+        <!-- ========== SHIZUKU ========== -->
+        <section class="view" id="view-shizuku">
+            <div class="page-head rise" style="--i:0">
+                <h1>Shizuku</h1>
+                <p>View and replace the Shizuku file stored in your GitHub repository.</p>
+            </div>
+
+            <div class="card conn rise" data-mod="shizuku" style="--i:1"></div>
+
+            <div class="card rise" style="--i:2">
+                <div class="card-title"><i data-ic="file"></i>Shizuku content</div>
+
+                <div class="field">
+                    <label for="shizukuContent">File content</label>
+                    <textarea class="inp" id="shizukuContent" placeholder="Enter the new Shizuku file content here..." spellcheck="false" wrap="off"></textarea>
+                    <div class="meta"><span id="shizukuLines">0 lines</span><span id="shizukuBytes">0 bytes</span></div>
+                </div>
+
+                <div class="btns">
+                    <button class="btn sec" data-act="view-file" data-arg="shizuku"><i data-ic="eye"></i>View current</button>
+                    <button class="btn" data-act="update-file" data-arg="shizuku"><i data-ic="upload"></i>Update Shizuku</button>
+                </div>
+
+                <div class="status" id="shizukuStatus"><i></i><span>Ready</span></div>
+
+                <div class="reveal" id="shizukuCurrent"><div>
+                    <div class="cur">
+                        <div class="cur-head"><span>Current GitHub content</span><span class="cur-size" id="shizukuSize">0 bytes</span></div>
+                        <div class="cur-body" id="shizukuCurrentContent"></div>
+                    </div>
+                </div></div>
+            </div>
+        </section>
+
+        <!-- ========== LINK ========== -->
+        <section class="view" id="view-link">
+            <div class="page-head rise" style="--i:0">
+                <h1>Link</h1>
+                <p>View and replace the online link stored in your GitHub repository.</p>
+            </div>
+
+            <div class="card conn rise" data-mod="link" style="--i:1"></div>
+
+            <div class="card rise" style="--i:2">
+                <div class="card-title"><i data-ic="link"></i>Online link</div>
+
+                <div class="field">
+                    <label for="linkContent">New link</label>
+                    <input class="inp" id="linkContent" placeholder="https://example.com" spellcheck="false" autocomplete="off">
+                </div>
+
+                <div class="btns">
+                    <button class="btn sec" data-act="view-file" data-arg="link"><i data-ic="eye"></i>View current</button>
+                    <button class="btn" data-act="update-file" data-arg="link"><i data-ic="upload"></i>Update link</button>
+                </div>
+
+                <div class="status" id="linkStatus"><i></i><span>Ready</span></div>
+
+                <div class="reveal" id="linkPreview"><div>
+                    <div class="cur">
+                        <div class="cur-head"><span>Current link</span></div>
+                        <div class="cur-body link" id="linkPreviewValue"></div>
+                    </div>
+                </div></div>
+            </div>
+        </section>
+
+        <!-- ========== USERS ========== -->
+        <section class="view" id="view-users">
+            <div class="page-head rise" style="--i:0">
+                <h1>Users</h1>
+                <p>Manage license users stored as JSON on GitHub.</p>
+            </div>
+
+            <div class="card conn rise" data-mod="users" style="--i:1"></div>
+
+            <div class="card sync rise" style="--i:2">
+                <div class="sync-info">
+                    <div class="sync-ic" id="syncIc"><i data-ic="sync"></i></div>
+                    <div>
+                        <h3>Sync database</h3>
+                        <p>Pull the latest users from GitHub.</p>
+                    </div>
+                </div>
+                <button class="btn" data-act="sync"><i data-ic="download"></i>Sync now</button>
+            </div>
+
+            <div class="stats rise" style="--i:3">
+                <div class="stat"><small>Total users</small><b id="statTotal">0</b></div>
+                <div class="stat"><small>Active</small><b id="statActive">0</b></div>
+                <div class="stat"><small>Inactive / expired</small><b id="statExpired">0</b></div>
+            </div>
+
+            <div class="workspace rise" style="--i:4">
+                <div class="card">
+                    <div class="card-title"><i data-ic="plus"></i>Add new user</div>
+
+                    <div class="field">
+                        <label for="deviceId">Device ID</label>
+                        <input class="inp" id="deviceId" placeholder="device_101" autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="field">
+                        <label for="userKey">User name (key)</label>
+                        <input class="inp" id="userKey" placeholder="Mahan" autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="field">
+                        <label for="daysCount">License days</label>
+                        <input class="inp" id="daysCount" type="number" placeholder="30" min="1" inputmode="numeric">
+                    </div>
+                    <div class="field">
+                        <label for="allowOffline">Offline access</label>
+                        <select class="inp" id="allowOffline">
+                            <option value="true">Yes (true)</option>
+                            <option value="false">No (false)</option>
+                        </select>
+                    </div>
+
+                    <div class="btns"><button class="btn" data-act="save-user" style="grid-column:1/-1"><i data-ic="check"></i>Save user</button></div>
+                </div>
+
+                <div class="card">
+                    <div class="search">
+                        <i data-ic="search"></i>
+                        <input class="inp" id="searchInput" placeholder="Search by name or device..." autocomplete="off" spellcheck="false">
+                    </div>
+
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Device ID</th>
+                                    <th>Key</th>
+                                    <th>Expires</th>
+                                    <th>Offline</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="cards" id="userCardsBody"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- EDIT USER -->
+<div class="modal" id="editModal">
+    <div class="sheet">
+        <div class="sheet-head">
+            <h3>Edit user</h3>
+            <button class="x" data-act="close-modal" data-arg="editModal" aria-label="Close"><i data-ic="x"></i></button>
+        </div>
+        <p class="sub">Any field left empty stays unchanged.</p>
+
+        <input type="hidden" id="editKeyOriginal">
+
+        <div class="field">
+            <label>User name (key)</label>
+            <div class="edit-row">
+                <div class="edit-cur" id="currUserKey" dir="auto">-</div>
+                <div class="edit-arrow"><i data-ic="arrow"></i></div>
+                <input class="inp" id="newUserKey" placeholder="No change" autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+        <div class="field">
+            <label>Extend license (days from today)</label>
+            <div class="edit-row">
+                <div class="edit-cur" id="currDaysLeft">-</div>
+                <div class="edit-arrow"><i data-ic="arrow"></i></div>
+                <input class="inp" id="newDaysCount" type="number" placeholder="No change" inputmode="numeric">
+            </div>
+        </div>
+        <div class="field">
+            <label>Offline access</label>
+            <div class="edit-row">
+                <div class="edit-cur" id="currAllowOffline">-</div>
+                <div class="edit-arrow"><i data-ic="arrow"></i></div>
+                <select class="inp" id="newAllowOffline">
+                    <option value="">No change</option>
+                    <option value="true">Yes (true)</option>
+                    <option value="false">No (false)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="btns"><button class="btn" data-act="save-edit"><i data-ic="check"></i>Confirm changes</button></div>
+    </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="modal" id="confirmModal">
+    <div class="sheet confirm">
+        <div class="sheet-head">
+            <h3>Please confirm</h3>
+            <button class="x" data-act="confirm-no" aria-label="Close"><i data-ic="x"></i></button>
+        </div>
+        <p class="sub" id="confirmMsg" style="margin:8px 0 0"></p>
+        <div class="btns">
+            <button class="btn ghost" data-act="confirm-no">Cancel</button>
+            <button class="btn" data-act="confirm-yes" id="confirmOk">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================================
+   HELPERS
+================================ */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ls = {
+    get:(k)=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+    set:(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} },
+    del:(k)=>{ try{ localStorage.removeItem(k); }catch(e){} }
+};
+
+const ICONS = {
+    grid:'<rect x="3" y="3" width="7" height="7" rx="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.8"/>',
+    file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
+    link:'<path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/>',
+    users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.6a6.5 6.5 0 0 1 3.5 5.4"/>',
+    eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    eyeoff:'<path d="M3 3l18 18"/><path d="M10.6 6.1A9.8 9.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4"/><path d="M6.5 7.3A17 17 0 0 0 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1"/>',
+    sync:'<path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/>',
+    download:'<path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/>',
+    upload:'<path d="M12 16V5"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/>',
+    edit:'<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+    pause:'<rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/>',
+    power:'<path d="M12 3v8"/><path d="M6.3 7a8 8 0 1 0 11.4 0"/>',
+    trash:'<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>',
+    x:'<path d="M6 6l12 12M18 6 6 18"/>',
+    check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+    chev:'<path d="m6 9 6 6 6-6"/>',
+    arrow:'<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+    alert:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/>',
+    pulse:'<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>'
+};
+const ic = n => '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[n]||'') + '</svg>';
+function hydrateIcons(root=document){ $$('[data-ic]',root).forEach(e=>{ e.innerHTML = ic(e.dataset.ic); e.style.display='contents'; e.removeAttribute('data-ic'); }); }
+
+/* ================================
+   TOAST / LOADING BAR / ACTIVITY
+================================ */
+function toast(msg, type='ok'){
+    const t = document.createElement('div');
+    t.className = 'toast' + (type==='error' ? ' error' : '');
+    t.innerHTML = ic(type==='error' ? 'alert' : 'check') + '<span></span>';
+    t.lastChild.textContent = msg;
+    $('#toasts').appendChild(t);
+    setTimeout(()=>{ t.classList.add('leave'); setTimeout(()=>t.remove(), 460); }, 3200);
+}
+
+let loads = 0;
+const loadStart = () => { loads++; $('#topbar').classList.add('on'); };
+const loadEnd   = () => { loads = Math.max(0, loads-1); if(!loads) $('#topbar').classList.remove('on'); };
+
+const acts = [];
+function logAct(text){
+    acts.unshift({ t:new Date(), text });
+    if(acts.length > 8) acts.pop();
+    renderLog();
+}
+function renderLog(){
+    const ul = $('#logList');
+    if(!acts.length){
+        ul.innerHTML = '<li class="empty">Nothing yet. Actions you run in this session will show up here.</li>';
+        return;
+    }
+    ul.innerHTML = acts.map((a,i)=>`<li style="--i:${i}"><time>${a.t.toLocaleTimeString('en-GB')}</time><span>${esc(a.text)}</span></li>`).join('');
+}
+
+/* ================================
+   STATUS BOXES (typed text)
+================================ */
+const typers = new WeakMap();
+function setText(el, text){
+    clearInterval(typers.get(el));
+    if(reduce || text.length > 90){ el.textContent = text; return; }
+    let i = 0;
+    el.textContent = '';
+    const id = setInterval(()=>{
+        i += 2;
+        el.textContent = text.slice(0, i);
+        if(i >= text.length) clearInterval(id);
+    }, 14);
+    typers.set(el, id);
+}
+function paintStatus(box, text, state=''){
+    box.className = 'status ' + state;
+    setText(box.querySelector('span'), text);
+}
+function setStatus(type, text, state=''){ paintStatus($('#'+type+'Status'), text, state); }
+
+/* ================================
+   NAVIGATION
+================================ */
+const VIEWS = ['overview','shizuku','link','users'];
+let currentView = 'overview';
+
+function moveInd(){
+    const act = $('.nav-item.active');
+    const ind = $('#navInd');
+    if(!act) return;
+    ind.style.width  = act.offsetWidth + 'px';
+    ind.style.height = act.offsetHeight + 'px';
+    ind.style.transform = `translate(${act.offsetLeft}px,${act.offsetTop}px)`;
+}
+function go(view){
+    if(!VIEWS.includes(view)) view = 'overview';
+    currentView = view;
+    $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+    $$('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.arg === view));
+    moveInd();
+    window.scrollTo({ top:0, behavior: reduce ? 'auto' : 'smooth' });
+    try{ history.replaceState(null, '', '#' + view); }catch(e){}
+}
+
+/* ================================
+   RAW URL PARSER + GITHUB API
+================================ */
+function parseRawUrl(raw){
+    raw = raw.trim();
+    const prefix = 'https://raw.githubusercontent.com/';
+    if(!raw.startsWith(prefix)){
+        throw new Error('RAW URL must start with https://raw.githubusercontent.com/');
+    }
+    const pieces = raw.substring(prefix.length).split('/');
+    if(pieces.length < 4) throw new Error('Invalid Raw GitHub URL');
+
+    const owner = pieces[0];
+    const repo  = pieces[1];
+    let branch, filePath;
+
+    if(pieces[2] === 'refs' && pieces[3] === 'heads'){
+        branch   = pieces[4];
+        filePath = pieces.slice(5).join('/');
+    }else{
+        branch   = pieces[2];
+        filePath = pieces.slice(3).join('/');
+    }
+    if(!owner || !repo || !branch || !filePath){
+        throw new Error('Could not read repository information');
+    }
+    return { owner, repo, branch, path:filePath };
+}
+
+function buildApiUrl(info, includeRef=true){
+    let api = 'https://api.github.com/repos/' +
+        encodeURIComponent(info.owner) + '/' +
+        encodeURIComponent(info.repo) + '/contents/' +
+        info.path.split('/').map(encodeURIComponent).join('/');
+    if(includeRef) api += '?ref=' + encodeURIComponent(info.branch);
+    return api;
+}
+
+async function getFileInfo(token, info){
+    const response = await fetch(buildApiUrl(info, true), {
+        method:'GET',
+        headers:{
+            'Accept':'application/vnd.github+json',
+            'Authorization':'Bearer ' + token,
+            'X-GitHub-Api-Version':'2026-03-10'
+        }
+    });
+    if(!response.ok){
+        const text = await response.text();
+        throw new Error('GitHub READ ' + response.status + ': ' + text);
+    }
+    return await response.json();
+}
+
+function decodeGithubContent(encoded){
+    const binary = atob(encoded.replace(/\s/g, ''));
+    const bytes = new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder('utf-8').decode(bytes);
+}
+
+function encodeBase64(str){
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    const chunk = 0x8000;
+    for(let i=0;i<bytes.length;i+=chunk){
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return btoa(binary);
+}
+
+async function updateGithubFile(token, info, content){
+    const file = await getFileInfo(token, info);
+    /* content is NOT trimmed: spaces, tabs, empty lines stay intact */
+    const response = await fetch(buildApiUrl(info, false), {
+        method:'PUT',
+        headers:{
+            'Accept':'application/vnd.github+json',
+            'Authorization':'Bearer ' + token,
+            'X-GitHub-Api-Version':'2026-03-10',
+            'Content-Type':'application/json'
+        },
+        body: JSON.stringify({
+            message:'MAXO update ' + info.path,
+            content:encodeBase64(content),
+            sha:file.sha,
+            branch:info.branch
+        })
+    });
+    if(!response.ok){
+        const text = await response.text();
+        throw new Error('GitHub UPDATE ' + response.status + ': ' + text);
+    }
+    return await response.json();
+}
+
+/* ================================
+   CONNECTIONS (token + raw url per section)
+================================ */
+const MODS = {
+    shizuku:{ tk:'MAXO_GITHUB_TOKEN', rk:'maxo_shizuku_raw', legacy:null,
+              ph:'https://raw.githubusercontent.com/USER/REPO/refs/heads/main/MAXO.txt', tokPh:'github_pat_...' },
+    link:   { tk:'maxo_link_token',   rk:'maxo_link_raw',    legacy:'MAXO_GITHUB_TOKEN',
+              ph:'https://raw.githubusercontent.com/USER/REPO/refs/heads/main/link.txt', tokPh:'github_pat_...' },
+    users:  { tk:'savix_token',       rk:'savix_raw_url',    legacy:null,
+              ph:'https://raw.githubusercontent.com/USER/REPO/refs/heads/main/User.json', tokPh:'ghp_... or github_pat_...' }
+};
+
+function buildConn(mod){
+    const m = MODS[mod];
+    $(`.conn[data-mod="${mod}"]`).innerHTML = `
+        <button class="conn-head" data-act="conn-toggle" data-mod="${mod}" aria-expanded="false">
+            <span class="conn-dot"></span>
+            <span class="conn-title">GitHub connection</span>
+            <span class="conn-state" id="cs-${mod}">Not saved</span>
+            <span class="conn-chev">${ic('chev')}</span>
+        </button>
+        <div class="reveal"><div><div class="conn-inner">
+            <div class="field">
+                <label for="tok-${mod}">Access token</label>
+                <div class="inp-wrap">
+                    <input class="inp" id="tok-${mod}" type="password" placeholder="${m.tokPh}" autocomplete="off" spellcheck="false">
+                    <button type="button" class="eye" data-act="eye" data-mod="${mod}" aria-label="Show or hide token">${ic('eye')}</button>
+                </div>
+            </div>
+            <div class="field">
+                <label for="raw-${mod}">Raw GitHub URL</label>
+                <input class="inp" id="raw-${mod}" placeholder="${m.ph}" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="chips" id="chips-${mod}"></div>
+            <div class="btns">
+                <button class="btn" data-act="conn-save" data-mod="${mod}">${ic('check')}Save connection</button>
+                <button class="btn sec" data-act="conn-clear" data-mod="${mod}">${ic('x')}Clear</button>
+            </div>
+            <div class="status" id="cst-${mod}"><i></i><span>Nothing saved yet</span></div>
+            <p class="hint">Stored only in this browser. The token needs Contents read and write permission.</p>
+        </div></div></div>`;
+    $('#raw-'+mod).addEventListener('input', () => updateChips(mod));
+}
+
+function updateChips(mod){
+    const raw = $('#raw-'+mod).value;
+    const box = $('#chips-'+mod);
+    if(!raw.trim()){ box.innerHTML = ''; return; }
+    try{
+        const i = parseRawUrl(raw);
+        box.innerHTML = [['owner',i.owner],['repo',i.repo],['branch',i.branch],['file',i.path]]
+            .map(([k,v]) => `<span class="chip"><b>${k}</b>${esc(v)}</span>`).join('');
+    }catch(e){
+        box.innerHTML = `<span class="chip bad">${esc(e.message)}</span>`;
+    }
+}
+
+const connSaved = mod => !!(ls.get(MODS[mod].tk) && ls.get(MODS[mod].rk));
+
+function openConn(mod, open){
+    const host = $(`.conn[data-mod="${mod}"]`);
+    host.classList.toggle('open', open);
+    $('.conn-head', host).setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function updateConnUI(mod){
+    const saved = connSaved(mod);
+    $(`.conn[data-mod="${mod}"]`).classList.toggle('saved', saved);
+    $('#cs-'+mod).textContent = saved ? 'Connected' : 'Not saved';
+    renderOverview();
+}
+
+function loadConn(mod){
+    const m = MODS[mod];
+    const token = ls.get(m.tk) || (m.legacy ? ls.get(m.legacy) : '') || '';
+    const raw = ls.get(m.rk) || '';
+    $('#tok-'+mod).value = token;
+    $('#raw-'+mod).value = raw;
+    updateChips(mod);
+    updateConnUI(mod);
+    if(connSaved(mod)){
+        paintStatus($('#cst-'+mod), 'Connection loaded', 'ok');
+        openConn(mod, false);
+    }else{
+        openConn(mod, true);
+    }
+}
+
+function saveConn(mod){
+    const token = $('#tok-'+mod).value.trim();
+    const raw = $('#raw-'+mod).value.trim();
+    const st = $('#cst-'+mod);
+    if(!token){ paintStatus(st, 'Error: token is empty', 'error'); return; }
+    if(!raw){   paintStatus(st, 'Error: raw URL is empty', 'error'); return; }
+    try{ parseRawUrl(raw); }catch(e){ paintStatus(st, 'Error: ' + e.message, 'error'); return; }
+
+    ls.set(MODS[mod].tk, token);
+    ls.set(MODS[mod].rk, raw);
+    updateConnUI(mod);
+    paintStatus(st, 'Connection saved successfully', 'ok');
+    toast(cap(mod) + ' connection saved');
+    logAct(cap(mod) + ' connection saved');
+    setTimeout(()=>openConn(mod, false), 700);
+    if(mod === 'users') fetchUsers(true);
+}
+
+function clearConn(mod){
+    ls.del(MODS[mod].tk);
+    ls.del(MODS[mod].rk);
+    $('#tok-'+mod).value = '';
+    $('#raw-'+mod).value = '';
+    updateChips(mod);
+    updateConnUI(mod);
+    paintStatus($('#cst-'+mod), 'Connection cleared', 'ok');
+    toast(cap(mod) + ' connection cleared');
+}
+
+function creds(mod){
+    const token = $('#tok-'+mod).value.trim();
+    const raw = $('#raw-'+mod).value;
+    if(!token || !raw.trim()){
+        const msg = !token ? 'Token required' : 'Raw URL required';
+        openConn(mod, true);
+        paintStatus($('#cst-'+mod), 'Error: ' + msg.toLowerCase(), 'error');
+        toast(msg, 'error');
+        return null;
+    }
+    return { token, raw };
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ================================
+   FILES: SHIZUKU + LINK
+================================ */
+function updateMeta(){
+    const v = $('#shizukuContent').value;
+    const lines = v ? v.split('\n').length : 0;
+    $('#shizukuLines').textContent = lines + (lines === 1 ? ' line' : ' lines');
+    $('#shizukuBytes').textContent = new TextEncoder().encode(v).length + ' bytes';
+}
+
+function showCurrent(type, content, fill){
+    if(type === 'shizuku'){
+        if(fill){ $('#shizukuContent').value = content; updateMeta(); }
+        $('#shizukuCurrentContent').textContent = content;
+        $('#shizukuSize').textContent = new TextEncoder().encode(content).length + ' bytes';
+        $('#shizukuCurrent').classList.add('show');
+    }else{
+        if(fill) $('#linkContent').value = content.replace(/^[\r\n]+|[\r\n]+$/g, '');
+        $('#linkPreviewValue').textContent = content;
+        $('#linkPreview').classList.add('show');
+    }
+}
+
+async function viewFile(type){
+    const c = creds(type);
+    if(!c) return;
+    try{
+        setStatus(type, 'Connecting to GitHub...', 'loading');
+        const info = parseRawUrl(c.raw);
+        setStatus(type, 'Reading current content...', 'loading');
+        const file = await getFileInfo(c.token, info);
+        if(!file || typeof file.content !== 'string'){
+            throw new Error('GitHub did not return file content');
+        }
+        showCurrent(type, decodeGithubContent(file.content), true);
+        setStatus(type, type === 'shizuku' ? 'Current content loaded' : 'Current link loaded', 'ok');
+    }catch(error){
+        setStatus(type, 'Error: ' + error.message, 'error');
+    }
+}
+
+async function updateFile(type){
+    const c = creds(type);
+    if(!c) return;
+    /* no trim: file spacing stays intact */
+    const content = type === 'shizuku' ? $('#shizukuContent').value : $('#linkContent').value;
+    try{
+        setStatus(type, 'Parsing repository...', 'loading');
+        const info = parseRawUrl(c.raw);
+        setStatus(type, 'Reading file SHA...', 'loading');
+        await updateGithubFile(c.token, info, content);
+        setStatus(type, 'Success: file updated', 'ok');
+        showCurrent(type, content, false);
+        toast(type === 'shizuku' ? 'Shizuku updated' : 'Link updated');
+        logAct((type === 'shizuku' ? 'Shizuku' : 'Link') + ' updated on GitHub (' + info.path + ')');
+    }catch(error){
+        setStatus(type, 'Error: ' + error.message, 'error');
+    }
+}
+
+/* ================================
+   USERS
+================================ */
+let currentSha = '';
+let usersList = [];
+let usersLoaded = false;
+let disabledUsersList = [];
+try{ disabledUsersList = JSON.parse(ls.get('disabled_users') || '[]'); }catch(e){ disabledUsersList = []; }
+
+function usersApiUrl(info){
+    return 'https://api.github.com/repos/' + encodeURIComponent(info.owner) + '/' + encodeURIComponent(info.repo) +
+           '/contents/' + info.path.split('/').map(encodeURIComponent).join('/');
+}
+
+function calculateExpiryDate(days){
+    const d = new Date();
+    d.setDate(d.getDate() + parseInt(days));
+    return String(d.getDate()).padStart(2,'0') + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + d.getFullYear();
+}
+
+function getDaysLeft(expiryStr){
+    try{
+        const [day, month, year] = expiryStr.split('-');
+        const expiry = new Date(year, month - 1, day);
+        return Math.ceil((expiry - new Date()) / (1000*60*60*24));
+    }catch(e){ return null; }
+}
+
+function countTo(el, to){
+    const from = parseInt(el.textContent) || 0;
+    if(reduce || from === to){ el.textContent = to; return; }
+    const t0 = performance.now(), dur = 700;
+    (function step(now){
+        const p = Math.min(1, (now - t0) / dur);
+        el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+        if(p < 1) requestAnimationFrame(step);
+    })(t0);
+}
+
+async function fetchUsers(silent=false){
+    const c = creds('users');
+    if(!c) return;
+    let info;
+    try{ info = parseRawUrl(c.raw); }catch(e){ toast(e.message, 'error'); return; }
+
+    loadStart();
+    $('#syncIc').classList.add('spin');
+    try{
+        const response = await fetch(usersApiUrl(info), { headers:{ 'Authorization':'token ' + c.token } });
+        if(!response.ok) throw new Error('GitHub connection failed (' + response.status + ')');
+        const data = await response.json();
+        currentSha = data.sha;
+        usersList = JSON.parse(decodeGithubContent(data.content) || '[]');
+        usersLoaded = true;
+        renderData();
+        updateStats();
+        renderOverview();
+        if(!silent){ toast('Users synced'); logAct('Users synced (' + (usersList.length + disabledUsersList.length) + ' total)'); }
+    }catch(err){
+        toast(err.message, 'error');
+    }finally{
+        loadEnd();
+        $('#syncIc').classList.remove('spin');
+    }
+}
+
+async function pushToGithub(commitMessage){
+    const c = creds('users');
+    if(!c) return false;
+    loadStart();
+    try{
+        const info = parseRawUrl(c.raw);
+        const response = await fetch(usersApiUrl(info), {
+            method:'PUT',
+            headers:{ 'Authorization':'token ' + c.token, 'Content-Type':'application/json' },
+            body: JSON.stringify({
+                message: commitMessage,
+                content: encodeBase64(JSON.stringify(usersList, null, 4)),
+                sha: currentSha
+            })
+        });
+        if(!response.ok) throw new Error('GitHub sync failed (' + response.status + ')');
+        const resData = await response.json();
+        currentSha = resData.content.sha;
+        renderData();
+        updateStats();
+        renderOverview();
+        return true;
+    }catch(err){
+        toast(err.message, 'error');
+        return false;
+    }finally{
+        loadEnd();
+    }
+}
+
+function updateStats(){
+    let active = 0, expired = 0;
+    usersList.forEach(u => {
+        const d = getDaysLeft(u.expirydate);
+        if(d !== null && d >= 0) active++; else expired++;
+    });
+    countTo($('#statTotal'),   usersList.length + disabledUsersList.length);
+    countTo($('#statActive'),  active);
+    countTo($('#statExpired'), expired + disabledUsersList.length);
+}
+
+function renderData(){
+    const tbody = $('#userTableBody');
+    const cards = $('#userCardsBody');
+    const q = $('#searchInput').value.trim().toLowerCase();
+
+    const all = [
+        ...usersList.map(u => ({ ...u, isDisabled:false })),
+        ...disabledUsersList.map(u => ({ ...u, isDisabled:true }))
+    ];
+    const list = q ? all.filter(u =>
+        (u.key && String(u.key).toLowerCase().includes(q)) ||
+        (u.device_id && String(u.device_id).toLowerCase().includes(q))
+    ) : all;
+
+    if(list.length === 0){
+        const msg = all.length === 0 ? 'No users yet. Add one or press Sync now.' : 'No users match your search.';
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-row">${msg}</td></tr>`;
+        cards.innerHTML = `<div class="empty-row">${msg}</div>`;
+        return;
+    }
+
+    let rows = '', cardsHtml = '';
+    list.forEach((u, idx) => {
+        const days = getDaysLeft(u.expirydate);
+        const isActive = !u.isDisabled && days !== null && days >= 0;
+
+        let statusText = isActive ? days + ' days left' : 'Expired';
+        let badge = isActive ? 'b-active' : 'b-expired';
+        if(u.isDisabled){ statusText = 'Paused'; badge = 'b-disabled'; }
+
+        const k = esc(u.key);
+        const toggleIcon  = u.isDisabled ? 'power' : 'pause';
+        const toggleTitle = u.isDisabled ? 'Enable' : 'Pause';
+        const dis = u.isDisabled ? '0' : '1';
+        const i = Math.min(idx, 12);
+
+        const toggleBtn = (withLabel) => `<button class="ib" data-act="toggle-user" data-key="${k}" data-disable="${dis}" title="${toggleTitle}">${ic(toggleIcon)}${withLabel ? toggleTitle : ''}</button>`;
+        const editBtn   = (withLabel) => `<button class="ib" data-act="edit-user" data-key="${k}" title="Edit">${ic('edit')}${withLabel ? 'Edit' : ''}</button>`;
+        const delBtn    = (withLabel) => `<button class="ib" data-act="delete-user" data-key="${k}" title="Delete">${ic('trash')}${withLabel ? 'Delete' : ''}</button>`;
+
+        rows += `
+            <tr class="${u.isDisabled ? 'off' : ''}" style="--i:${i}">
+                <td><code dir="auto">${esc(u.device_id || '-')}</code></td>
+                <td dir="auto"><b>${k}</b></td>
+                <td>${esc(u.expirydate)}</td>
+                <td>${u.Allowoffline ? 'Yes' : 'No'}</td>
+                <td><span class="badge ${badge}">${statusText}</span></td>
+                <td><div class="acts">${toggleBtn(false)}${editBtn(false)}${delBtn(false)}</div></td>
+            </tr>`;
+
+        cardsHtml += `
+            <div class="ucard ${u.isDisabled ? 'off' : ''}" style="--i:${i}">
+                <div class="ucard-head"><span dir="auto">${k}</span><span class="badge ${badge}">${statusText}</span></div>
+                <div class="ucard-body">
+                    <span>Device<b dir="auto">${esc(u.device_id || '-')}</b></span>
+                    <span>Expires<b>${esc(u.expirydate)}</b></span>
+                    <span>Offline<b>${u.Allowoffline ? 'Yes' : 'No'}</b></span>
+                </div>
+                <div class="ucard-act">${toggleBtn(true)}${editBtn(true)}${delBtn(true)}</div>
+            </div>`;
+    });
+    tbody.innerHTML = rows;
+    cards.innerHTML = cardsHtml;
+}
+
+function openEditDialog(key){
+    const u = usersList.find(x => x.key === key) || disabledUsersList.find(x => x.key === key);
+    if(!u) return;
+    $('#editKeyOriginal').value = u.key;
+    $('#currUserKey').textContent = u.key || '-';
+    const d = getDaysLeft(u.expirydate);
+    $('#currDaysLeft').textContent = d !== null ? d + ' days' : 'Expired';
+    $('#currAllowOffline').textContent = u.Allowoffline ? 'Yes' : 'No';
+    $('#newUserKey').value = '';
+    $('#newDaysCount').value = '';
+    $('#newAllowOffline').value = '';
+    openModal('editModal');
+}
+
+async function saveEditDialog(){
+    const origKey = $('#editKeyOriginal').value;
+    let target = usersList;
+    let index = target.findIndex(u => u.key === origKey);
+    if(index === -1){
+        target = disabledUsersList;
+        index = target.findIndex(u => u.key === origKey);
+    }
+    if(index === -1) return;
+
+    const u = target[index];
+    const newKey = $('#newUserKey').value.trim();
+    const newDays = $('#newDaysCount').value.trim();
+    const newOffline = $('#newAllowOffline').value;
+
+    /* apply only fields that were filled in */
+    if(newKey) u.key = newKey;
+    if(newDays) u.expirydate = calculateExpiryDate(newDays);
+    if(newOffline !== '') u.Allowoffline = (newOffline === 'true');
+
+    closeModal('editModal');
+
+    if(target === disabledUsersList){
+        ls.set('disabled_users', JSON.stringify(disabledUsersList));
+        renderData();
+        updateStats();
+        toast('User changes saved');
+    }else{
+        const ok = await pushToGithub('Edit user ' + u.key);
+        if(ok){ toast('Changes confirmed'); logAct('User edited: ' + u.key); }
+    }
+}
+
+async function toggleDisableUser(key, disable){
+    if(disable){
+        const i = usersList.findIndex(u => u.key === key);
+        if(i !== -1) disabledUsersList.push(usersList.splice(i, 1)[0]);
+    }else{
+        const i = disabledUsersList.findIndex(u => u.key === key);
+        if(i !== -1) usersList.push(disabledUsersList.splice(i, 1)[0]);
+    }
+    ls.set('disabled_users', JSON.stringify(disabledUsersList));
+    const ok = await pushToGithub((disable ? 'Disable ' : 'Enable ') + key);
+    if(ok){
+        toast(disable ? 'User paused' : 'User enabled again');
+        logAct((disable ? 'User paused: ' : 'User enabled: ') + key);
+    }
+}
+
+async function saveUser(){
+    const deviceId = $('#deviceId').value.trim();
+    const key = $('#userKey').value.trim();
+    const daysCount = $('#daysCount').value.trim();
+    const allowOffline = $('#allowOffline').value === 'true';
+
+    if(!key || !daysCount || !deviceId) return toast('Fill in all fields', 'error');
+    if(!creds('users')) return;
+
+    usersList.push({
+        device_id: deviceId,
+        key: key,
+        expirydate: calculateExpiryDate(daysCount),
+        Allowoffline: allowOffline
+    });
+
+    const ok = await pushToGithub('Add ' + key);
+    if(ok){
+        toast('New user added');
+        logAct('User added: ' + key);
+        $('#deviceId').value = '';
+        $('#userKey').value = '';
+        $('#daysCount').value = '';
+    }
+}
+
+async function deleteUser(key){
+    const yes = await askConfirm('Delete "' + key + '" completely? This also removes the user from GitHub.');
+    if(!yes) return;
+    usersList = usersList.filter(u => u.key !== key);
+    disabledUsersList = disabledUsersList.filter(u => u.key !== key);
+    ls.set('disabled_users', JSON.stringify(disabledUsersList));
+    const ok = await pushToGithub('Delete ' + key);
+    if(ok){ toast('User deleted'); logAct('User deleted: ' + key); }
+}
+
+/* ================================
+   MODALS
+================================ */
+let confirmResolve = null;
+function openModal(id){ $('#'+id).classList.add('open'); }
+function closeModal(id){
+    $('#'+id).classList.remove('open');
+    if(id === 'confirmModal' && confirmResolve){ const r = confirmResolve; confirmResolve = null; r(false); }
+}
+function askConfirm(msg){
+    return new Promise(res => {
+        $('#confirmMsg').textContent = msg;
+        confirmResolve = res;
+        openModal('confirmModal');
+    });
+}
+function settleConfirm(v){
+    const r = confirmResolve;
+    confirmResolve = null;
+    $('#confirmModal').classList.remove('open');
+    if(r) r(v);
+}
+
+/* ================================
+   OVERVIEW
+================================ */
+function renderOverview(){
+    ['shizuku','link','users'].forEach(m => {
+        const on = connSaved(m);
+        const el = $('#ov-' + m);
+        el.classList.toggle('on', on);
+        el.querySelector('span').textContent = on ? 'Connected' : 'Not connected';
+    });
+    $('#ov-users-count').textContent = usersLoaded ? (usersList.length + disabledUsersList.length) + ' users' : 'Not synced';
+}
+
+/* ================================
+   CLICK ROUTER
+================================ */
+function ripple(el, e){
+    const r = el.getBoundingClientRect();
+    const s = Math.max(r.width, r.height) * 2;
+    const d = document.createElement('span');
+    d.className = 'ripple';
+    d.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s/2}px;top:${e.clientY - r.top - s/2}px`;
+    el.appendChild(d);
+    setTimeout(() => d.remove(), 800);
+}
+
+async function busy(btn, fn){
+    if(btn.classList.contains('busy')) return;
+    btn.classList.add('busy');
+    loadStart();
+    try{ await fn(); } finally { btn.classList.remove('busy'); loadEnd(); }
+}
+
+const ACTS = {
+    'go':           el => go(el.dataset.arg),
+    'conn-toggle':  el => openConn(el.dataset.mod, !$(`.conn[data-mod="${el.dataset.mod}"]`).classList.contains('open')),
+    'conn-save':    el => saveConn(el.dataset.mod),
+    'conn-clear':   el => clearConn(el.dataset.mod),
+    'eye':          el => {
+        const inp = $('#tok-' + el.dataset.mod);
+        const show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        el.innerHTML = ic(show ? 'eyeoff' : 'eye');
+    },
+    'view-file':    el => busy(el, () => viewFile(el.dataset.arg)),
+    'update-file':  el => busy(el, () => updateFile(el.dataset.arg)),
+    'sync':         el => busy(el, () => fetchUsers(false)),
+    'save-user':    el => busy(el, saveUser),
+    'toggle-user':  el => toggleDisableUser(el.dataset.key, el.dataset.disable === '1'),
+    'edit-user':    el => openEditDialog(el.dataset.key),
+    'delete-user':  el => deleteUser(el.dataset.key),
+    'save-edit':    el => busy(el, saveEditDialog),
+    'close-modal':  el => closeModal(el.dataset.arg),
+    'confirm-yes':  () => settleConfirm(true),
+    'confirm-no':   () => settleConfirm(false)
+};
+
+document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]');
+    if(!el) return;
+    if(el.classList.contains('btn')) ripple(el, e);
+    const fn = ACTS[el.dataset.act];
+    if(fn) fn(el, e);
+});
+
+$$('.modal').forEach(m => m.addEventListener('mousedown', e => {
+    if(e.target === m) closeModal(m.id);
+}));
+document.addEventListener('keydown', e => {
+    if(e.key === 'Escape') $$('.modal.open').forEach(m => closeModal(m.id));
+});
+
+$('#searchInput').addEventListener('input', renderData);
+$('#shizukuContent').addEventListener('input', updateMeta);
+
+/* ================================
+   POINTER GLOW + CLOCK
+================================ */
+let raf = 0;
+window.addEventListener('pointermove', e => {
+    if(raf) return;
+    raf = requestAnimationFrame(() => {
+        raf = 0;
+        const root = document.documentElement;
+        root.style.setProperty('--mx', e.clientX + 'px');
+        root.style.setProperty('--my', e.clientY + 'px');
+        const card = e.target.closest && e.target.closest('.card');
+        if(card){
+            const r = card.getBoundingClientRect();
+            card.style.setProperty('--x', (e.clientX - r.left) + 'px');
+            card.style.setProperty('--y', (e.clientY - r.top) + 'px');
+        }
+    });
+}, { passive:true });
+
+function tick(){ $('#clock').textContent = new Date().toLocaleTimeString('en-GB'); }
+
+/* ================================
+   INIT
+================================ */
+hydrateIcons();
+['shizuku','link','users'].forEach(buildConn);
+['shizuku','link','users'].forEach(loadConn);
+renderLog();
+renderData();
+updateStats();
+renderOverview();
+updateMeta();
+tick(); setInterval(tick, 1000);
+
+go((location.hash || '').slice(1));
+window.addEventListener('resize', moveInd);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(moveInd);
+window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if(v !== currentView) go(v); });
+
+/* boot sequence */
+const boot = $('#boot');
+const html = document.documentElement;
+if(reduce){
+    boot.remove();
+    html.classList.remove('booting');
+}else{
+    setTimeout(() => boot.classList.add('done'), 1500);
+    setTimeout(() => html.classList.remove('booting'), 1650);
+    setTimeout(() => boot.remove(), 2800);
+}
+
+/* auto-sync users like the original admin did */
+if(connSaved('users')) fetchUsers(true);
+
+})();
+</script>
+</body>
+</html>

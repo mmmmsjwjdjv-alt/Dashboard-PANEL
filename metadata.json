@@ -1,0 +1,6 @@
+{
+  "name": "MAXO Dashboard",
+  "description": "Professional GitHub file and license management dashboard for Shizuku, links, and user database.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
