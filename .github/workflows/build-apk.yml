@@ -40,16 +40,26 @@ jobs:
       - name: Build Debug APK
         run: gradle :app:assembleDebug --no-daemon --stacktrace -Djava.awt.headless=true
 
-      - name: Prepare APK Output
+      - name: Prepare APK File
         run: |
-          mkdir -p build-output
-          cp app/build/outputs/apk/debug/app-debug.apk build-output/MAXO-Dashboard.apk
-          ls -la build-output/
+          cp app/build/outputs/apk/debug/app-debug.apk ./MAXO-Dashboard.apk
+          ls -la MAXO-Dashboard.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: MAXO-Dashboard-APK
-          path: build-output/MAXO-Dashboard.apk
+          path: ./MAXO-Dashboard.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Create or Update GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete v1.0 --yes || true
+          git tag -f v1.0 || true
+          git push -f origin v1.0 || true
+          gh release create v1.0 ./MAXO-Dashboard.apk \
+            --title "MAXO Dashboard v1.0 (Direct APK)" \
+            --notes "Direct installable APK for Android. Download MAXO-Dashboard.apk below directly without needing to extract any zip." || true
